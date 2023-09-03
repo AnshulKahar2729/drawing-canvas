@@ -14,8 +14,12 @@ const io = socketIo(server, {
 
 io.on("connection", (socket) => {
   console.log("Client connected !");
-  socket.on("drawing", (data) => {
-    socket.broadcast.emit("drawing", data);
+  socket.on("join", (roomId) => {
+    socket.join(roomId);
+    socket.emit("room_join", roomId);
+  });
+  socket.on("drawing", ({ roomId, data }) => {
+    socket.to(roomId).emit("drawing", data);
   });
   socket.on("disconnection", () => {
     console.log("Client disconnected !");
@@ -23,5 +27,5 @@ io.on("connection", (socket) => {
 });
 
 server.listen(8080, () => {
-  console.log("Server running on the port !");
+  console.log("Server running on the port 8080!");
 });

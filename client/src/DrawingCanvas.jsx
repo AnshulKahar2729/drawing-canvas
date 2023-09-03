@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import io from "socket.io-client";
+import { useSocket } from "./context/SocketProvider";
+import { useParams } from "react-router-dom";
 
 const DrawingArea = () => {
   const canvasRef = useRef(null);
   const [drawing, setDrawing] = useState(false);
+  const { roomId } = useParams();
   const [context, setContext] = useState(null);
-  const [socket, setSocket] = useState(null); // Store the socket instance
-
+  const socket = useSocket();
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -14,31 +15,26 @@ const DrawingArea = () => {
     ctx.lineCap = "round";
     ctx.lineWidth = 2;
     setContext(ctx);
-
-    const newSocket = io("http://localhost:8080"); // Update with your server URL
-    setSocket(newSocket);
-
-    newSocket.on("drawing", (data) => {
+    socket.on("drawing", (data) => {
       const { offsetX, offsetY, type } = data;
       if (type === "start") {
-        context.beginPath();
-        context.moveTo(offsetX, offsetY);
+        ctx.beginPath();
+        ctx.moveTo(offsetX, offsetY);
       } else if (type === "draw") {
-        context.lineTo(offsetX, offsetY);
-        context.stroke();
+        ctx.lineTo(offsetX, offsetY);
+        ctx.stroke();
       } else if (type === "end") {
-        context.closePath();
+        ctx.closePath();
       }
     });
-
-    return () => {
-      newSocket.disconnect();
-    };
-  }, [context]);
+  }, [context, socket]);
 
   const emitDrawingEvent = (data) => {
     if (socket) {
-      socket.emit("drawing", data);
+      socket.emit("drawing", {
+        roomId: roomId,
+        data: data,
+      });
     }
   };
 
