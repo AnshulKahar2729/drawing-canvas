@@ -1,4 +1,6 @@
 api/node_modules
-client/node_modules
+api/yarn.lock
 api/package-lock.json
+client/node_modules
 client/package-lock.json
+client/yarn.lock
